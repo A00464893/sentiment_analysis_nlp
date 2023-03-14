@@ -20,8 +20,9 @@ from sklearn.metrics import classification_report, accuracy_score
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+from nltk.data import path
 
-
+path.append('D:/nltk_data')
 dir = os.path.abspath("sentiment labelled sentences")
 df = pd.DataFrame(columns=["data", "target"])
 
@@ -60,10 +61,6 @@ def clean_data(data_set):
         cleaned_data.append(' '.join(tokens))
 
     return cleaned_data
-
-
-# train = fetch_20newsgroups(subset='train', shuffle=True)
-# test = fetch_20newsgroups(subset='test', shuffle=True)
 
 models = dict()
 
@@ -104,13 +101,16 @@ clfs = [{
     'param_grid': {'hidden_layer_sizes': [(50,), (100,), (50, 50)], 'alpha': [0.0001, 0.001, 0.01]}
 }]
 
+
 for clf in clfs:
-    grid = Pipeline([('clean', clean_function),
-                     ('vect', CountVectorizer()),
-                     ('tfidf', TfidfTransformer()),
-                     ('clf-grid', GridSearchCV(clf['clf'], param_grid=clf['param_grid'], cv=5)),
-                     ])
+    pipeline = Pipeline([('clean', clean_function),
+                         ('vect', CountVectorizer()),
+                         ('tfidf', TfidfTransformer()),
+                         ('clf-grid', clf['clf']),
+                         ])
+    grid = GridSearchCV(pipeline, param_grid=clf['param_grid'], cv=3)
     grid.fit(train['data'], train['target'])
+    grid = grid.best_estimator_
     predicted = grid.predict(test['data'])
     test_report = classification_report(test['target'], predicted)
     print("Multi-layer perceptron Classifier validation report: \n", test_report)
