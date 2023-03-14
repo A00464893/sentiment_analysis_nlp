@@ -90,15 +90,15 @@ models["SGD"] = (accuracy_score(test['target'], predicted), text_clf)
 clfs = [{
     'clf': MultinomialNB(),
     'name': 'grid_nb',
-    'param_grid': {'alpha': [0.001, 0.01, 0.1]}
+    'param_grid': {'nb__alpha': [0.001, 0.01, 0.1]}
 }, {
     'clf': RandomForestClassifier(),
     'name': 'grid_rf',
-    'param_grid': {'n_estimators': [100, 200, 300], 'max_depth': [10, 20, 30]}
+    'param_grid': {'rf__n_estimators': [100, 200, 300], 'rf__max_depth': [10, 20, 30]}
 }, {
     'clf': MLPClassifier(),
     'name': 'grid_mlp',
-    'param_grid': {'hidden_layer_sizes': [(50,), (100,), (50, 50)], 'alpha': [0.0001, 0.001, 0.01]}
+    'param_grid': {'mlp__hidden_layer_sizes': [(50,), (100,), (50, 50)], 'mlp__alpha': [0.0001, 0.001, 0.01]}
 }]
 
 
@@ -106,9 +106,8 @@ for clf in clfs:
     pipeline = Pipeline([('clean', clean_function),
                          ('vect', CountVectorizer()),
                          ('tfidf', TfidfTransformer()),
-                         ('clf-grid', clf['clf']),
-                         ])
-    grid = GridSearchCV(pipeline, param_grid=clf['param_grid'], cv=3)
+                         (clf["name"].split('_')[1], clf['clf'])])
+    grid = GridSearchCV(pipeline, param_grid=clf['param_grid'], cv=3, n_jobs=4)
     grid.fit(train['data'], train['target'])
     grid = grid.best_estimator_
     predicted = grid.predict(test['data'])
